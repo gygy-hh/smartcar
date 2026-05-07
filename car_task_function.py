@@ -42,6 +42,9 @@ def init():
     my_car.arm.reset_position()
     my_car.reset_position()  #
 
+def auto_lane_tracing(speed=0.3, dis_hold=0.85):
+    my_car.lane_dis_offset(speed=speed, dis_hold=dis_hold)
+    print(f"巡线停止的位置：{my_car.get_odometry()}")
 
 def auto_seeding():
 
