@@ -434,6 +434,8 @@ class ArmController:
         thread_reset_x.start()
         thread_reset_y.join()
         thread_reset_x.join()
+        self.x = 0
+        self.y = 0
         self.save_config()
 
     def switch_side(self, side):
