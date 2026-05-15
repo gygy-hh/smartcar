@@ -587,6 +587,57 @@ class MecanumDriver:
         target_position[2] = current_position[2] + position_offset[2]
         self.move_to_position(target_position, duration, max_velocities, tolerance)
 
+    def move(self, position_offset, duration=None, max_velocities=None, tolerance=None):
+        """
+        相对移动指定偏移量（单位：x/y为mm，z为度）
+
+        参数:
+            position_offset: 相对位置偏移量 [x偏移(mm), y偏移(mm), 角度偏移(度)]
+            duration: 预计运动时长（秒）
+            max_velocities: 速度上限 [x轴速度, y轴速度, 角速度]
+            tolerance: 位置误差阈值 [x误差, y误差, 角度误差]
+        """
+        offset = [
+            position_offset[0] / 1000.0,
+            position_offset[1] / 1000.0,
+            math.radians(position_offset[2]),
+        ]
+        self.move_for(offset, duration, max_velocities, tolerance)
+
+    # ==================== 便捷属性接口 ====================
+    @property
+    def x(self) -> float:
+        """获取当前x位置（单位：mm）"""
+        with self._lock:
+            return self.chassis.odometry.position[0] * 1000.0
+
+    @x.setter
+    def x(self, mm: float):
+        """相对移动x（单位：mm）"""
+        self.move([mm / 1000.0, 0, 0])
+
+    @property
+    def y(self) -> float:
+        """获取当前y位置（单位：mm）"""
+        with self._lock:
+            return self.chassis.odometry.position[1] * 1000.0
+
+    @y.setter
+    def y(self, mm: float):
+        """相对移动y（单位：mm）"""
+        self.move([0, mm / 1000.0, 0])
+
+    @property
+    def z(self) -> float:
+        """获取当前角度（单位：度）"""
+        with self._lock:
+            return math.degrees(self.chassis.odometry.position[2])
+
+    @z.setter
+    def z(self, degrees: float):
+        """相对旋转角度（单位：度）"""
+        self.move([0, 0, math.radians(degrees)])
+
 
 if __name__ == "__main__":
     """

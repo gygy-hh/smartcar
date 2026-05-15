@@ -233,7 +233,6 @@ class ArmController:
         self.x_pose_now = self.motor_x.get_dis() - self.x_pose_start
         return self.x_pose_now
 
-
     def x_pid_moveto(self, target_pose):
         """
         使用PID控制水平方向移动
@@ -468,8 +467,8 @@ class ArmController:
             self.side = _angle
             assert _angle in ("LEFT", "MID", "RIGHT"), "Direction should be LEFT, MID, or RIGHT"
             _angle = self.hand_angle_list[_angle]
-        # logger.info(f"设置arm转到{_angle}")
-        self.arm_servo.set_angle( _angle, speed)
+        self._arm_angle_last = _angle
+        self.arm_servo.set_angle(_angle, speed)
 
     def set_hand_angle(self, angle: Union[str, int] = "UP", speed=80):
         """
@@ -482,10 +481,10 @@ class ArmController:
         if isinstance(angle, str):
             assert angle in ("UP","MID","DOWN"), "Direction should be UP, MID, or DOWN"
             angle = self.hand_angle_list2[angle]
-        self.hand_servo.set_angle(angle, speed)  
+        self._hand_angle_last = angle
+        self.hand_servo.set_angle(angle, speed)
 
-
-    def go_for(self, x_offset, y_offset,time_run=None, speed=[0.15, 0.04]):
+    def go_for(self, x_offset, y_offset, time_run=None, speed=[0.15, 0.04]):
         """
         移动机械臂到当前位置的相对量
 
@@ -648,6 +647,46 @@ class ArmController:
         if hand is not None:
             self.set_hand_angle(hand)
 
+    # ==================== 便捷属性接口 ====================
+    @property
+    def y(self) -> float:
+        """获取当前竖直位置（单位：mm）"""
+        return self.y_get_position() * 1000.0
+
+    @y.setter
+    def y(self, mm: float):
+        """设置目标竖直位置（单位：mm）"""
+        self.move_y_position(mm / 1000.0)
+
+    @property
+    def x(self) -> float:
+        """获取当前水平位置（单位：mm）"""
+        return self.x_get_position() * 1000.0
+
+    @x.setter
+    def x(self, mm: float):
+        """设置目标水平位置（单位：mm）"""
+        self.move_x_position(mm / 1000.0)
+
+    @property
+    def angle(self) -> float:
+        """获取手臂舵机当前角度"""
+        return self._arm_angle_last if hasattr(self, '_arm_angle_last') else 0
+
+    @angle.setter
+    def angle(self, val: Union[str, int]):
+        """设置手臂舵机角度"""
+        self.set_arm_angle(val)
+
+    @property
+    def hand_angle(self) -> float:
+        """获取手部舵机当前角度"""
+        return self._hand_angle_last if hasattr(self, '_hand_angle_last') else 0
+
+    @hand_angle.setter
+    def hand_angle(self, val: Union[str, int]):
+        """设置手部舵机角度"""
+        self.set_hand_angle(val)
 
 
 if __name__ == '__main__':
